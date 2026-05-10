@@ -16,6 +16,12 @@ def return_menu(frm, root, pixel):
     frm.destroy()
     for widget in root.winfo_children():
         widget.destroy()
+    
+    global matrix
+    global gridsize
+    gridsize = 3
+    matrix = None
+    
     start_menu(root, pixel)
 
 def grow_grid(root, pixel, frm : ttk.Frame):
@@ -42,9 +48,8 @@ def place_grid(root, pixel):
     
     for i in range(gridsize):
         for j in range(gridsize):
-            tk.Button(frm, image=pixel, width=100, height=100, text="button", compound="center", command=lambda r=j, c=i: matrix_set(r, c, matrix)).grid(column=i, row=j)
+            tk.Button(frm, image=pixel, width=100, height=100, compound="center", command=lambda r=j, c=i: play_move(r, c, matrix)).grid(column=i, row=j)
     
-    tk.Button(root, image=pixel, width=100, height=100, text="print", compound="center", command=lambda: print_matrix(matrix)).place(relx=0.8, rely=0.5, anchor=tk.CENTER)
     tk.Button(root, image=pixel, width=100, height=100, text="back", compound="center", command=lambda: return_menu(frm, root, pixel)).place(relx=0.2, rely=0.5, anchor=tk.CENTER)
     
     frm.place(relx=0.5, rely=0.5, anchor=tk.CENTER)

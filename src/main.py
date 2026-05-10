@@ -6,6 +6,7 @@ from gamelogic import *
 def main():
     root = tk.Tk()
     root.geometry("1280x720")
+    root.title("Tic-Tac-Toe")
     pixel = tk.PhotoImage(width=1, height=1)
     start_menu(root, pixel)
 
