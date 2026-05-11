@@ -1,6 +1,3 @@
-import tkinter as tk
-from tkinter import ttk
-
 from globalvar import *
 
 def matrix_set(r, c, matrix, current_player):
@@ -17,10 +14,13 @@ def print_matrix(matrix):
     for row in matrix:
         print(row)
 
-def check_win(matrix):
+def check_win(matrix, gridsize):
+    full_board = True
+
     for r in range(gridsize):
         for c in range(gridsize):
             if matrix[r][c] == 0:
+                full_board = False
                 continue
             
             target = target_num
@@ -32,25 +32,25 @@ def check_win(matrix):
                 try:
                     if (matrix[r][c] + matrix[r][c+1] + matrix[r][c+2] == target and 
                         matrix[r][c+1] != 0 and matrix[r][c+2] != 0):
-                        return True
+                        return 1
                 except IndexError:
                     pass
                 try:
                     if (matrix[r][c] + matrix[r+1][c] + matrix[r+2][c] == target and 
                         matrix[r+1][c] != 0 and matrix[r+2][c] != 0):
-                        return True
+                        return 1
                 except IndexError:
                     pass
                 try:
                     if (matrix[r][c] + matrix[r+1][c+1] + matrix[r+2][c+2] == target 
                         and matrix[r+1][c+1] != 0 and matrix[r+2][c+2] != 0):
-                        return True
+                        return 1
                 except IndexError:
                     pass
                 try:
                     if (matrix[r][c] + matrix[r+1][c-1] + matrix[r+2][c-2] == target and 
                         c - 2 >= 0 and matrix[r+1][c-1] != 0 and matrix[r+2][c-2] != 0):
-                        return True
+                        return 1
                 except IndexError:
                     pass
 
@@ -58,27 +58,29 @@ def check_win(matrix):
                 try:
                     if (matrix[r][c] + matrix[r][c+1] + matrix[r][c+2] + matrix[r][c+3] == target and 
                         matrix[r][c+1] != 0 and matrix[r][c+2] != 0 and matrix[r][c+3] != 0):
-                        return True
+                        return 1
                 except IndexError:
                     pass
                 try:
                     if (matrix[r][c] + matrix[r+1][c] + matrix[r+2][c] + matrix[r+3][c] == target and 
                         matrix[r+1][c] != 0 and matrix[r+2][c] != 0 and matrix[r+3][c] != 0):
-                        return True
+                        return 1
                 except IndexError:
                     pass
                 try:
                     if (matrix[r][c] + matrix[r+1][c+1] + matrix[r+2][c+2] + matrix[r+3][c+3] == target and 
                         matrix[r+1][c+1] != 0 and matrix[r+2][c+2] != 0 and matrix[r+3][c+3] != 0):
-                        return True
+                        return 1
                 except IndexError:
                     pass
                 try:
                     if (matrix[r][c] + matrix[r+1][c-1] + matrix[r+2][c-2] + matrix[r+3][c-3] == target and 
                         c - 3 >= 0 and matrix[r+1][c-1] != 0 and matrix[r+2][c-2] != 0 and matrix[r+3][c-3] != 0):
-                        return True
+                        return 1
                 except IndexError:
                     pass                
             else:
                 raise ValueError("target_num not 3 or 4")
-    return False
+    if full_board == True:
+        return 2
+    return 0

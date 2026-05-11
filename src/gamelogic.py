@@ -8,18 +8,21 @@ def playgame(root, pixel):
     global current_player
     for widget in root.winfo_children():
         widget.destroy()
-    global show_player
+    
     show_player = tk.Label(root, text=f"Current Player is {current_player.upper()}")
+    
     place_grid(root, pixel)
-    show_player.place(relx=0.5, rely=0.2, anchor=tk.CENTER)
+    show_player.place(relx=0.2, rely=0.1, anchor=tk.CENTER)
 
 def start_menu(root, pixel):
     tk.Button(root, image=pixel, width=150, height=50, text="Play", compound="center", command=lambda: playgame(root, pixel)).place(relx=0.5, rely=0.4, anchor=tk.CENTER)
     tk.Button(root, image=pixel, width=150, height=50, text="Quit", compound="center", command=root.destroy).place(relx=0.5, rely=0.65, anchor=tk.CENTER)
-    root.mainloop()
+    global running
+    if not running:
+        running = True
+        root.mainloop()
 
-def return_menu(frm, root, pixel):
-    frm.destroy()
+def return_menu(root, pixel):
     for widget in root.winfo_children():
         widget.destroy()
     
@@ -28,23 +31,30 @@ def return_menu(frm, root, pixel):
     global current_player
     
     current_player = 'x'
-    gridsize = 3
+    gridsize = 4
     matrix = None
     
     start_menu(root, pixel)
 
-def play_move(r, c, matrix, frm, root, pixel):
+def play_move(r, c, matrix, root, pixel, gridsize):
     global current_player
 
     if not matrix_set(r, c, matrix, current_player):
         return
     print_matrix(matrix)
-    if check_win(matrix):
+    
+    result = check_win(matrix, gridsize)
+    if result == 1:
         if current_player == 'x':
             print("X WINS!")
         elif current_player == 'o':
             print("O WINS!")
-        return_menu(frm, root, pixel)
+        return_menu(root, pixel)
+        return
+    
+    elif result == 2:
+        print('TIE!')
+        return_menu(root, pixel)
         return
     
     if current_player == 'x':
@@ -53,16 +63,21 @@ def play_move(r, c, matrix, frm, root, pixel):
         current_player = 'x'
     
     show_player = tk.Label(root, text=f"Current Player is {current_player.upper()}")
-    show_player.place(relx=0.5, rely=0.2, anchor=tk.CENTER)
+    show_player.place(relx=0.2, rely=0.1, anchor=tk.CENTER)
 
-def grow_grid(root, pixel, frm : ttk.Frame):
+def grow_grid(root, pixel):
     global gridsize
     gridsize += 2
-    frm.destroy()
+    
+    for widget in root.winfo_children():
+        widget.destroy()
+    
     place_grid(root, pixel)
+    show_player = tk.Label(root, text=f"Current Player is {current_player.upper()}")
+    show_player.place(relx=0.2, rely=0.1, anchor=tk.CENTER)
 
 def place_grid(root, pixel):
-    frm = ttk.Frame(root)
+    frm = ttk.Frame(root, style='background.TFrame')
     frm.grid()
     
     global matrix
@@ -79,10 +94,9 @@ def place_grid(root, pixel):
     
     for i in range(gridsize):
         for j in range(gridsize):
-            tk.Button(frm, image=pixel, width=100, height=100, compound="center", command=lambda r=j, c=i: play_move(r, c, matrix, frm, root, pixel)).grid(column=i, row=j)
-    
-    tk.Button(root, image=pixel, width=100, height=100, text="back", compound="center", command=lambda: return_menu(frm, root, pixel)).place(relx=0.2, rely=0.5, anchor=tk.CENTER)
-    
+            canvas = tk.Canvas(frm, width=100, height=100, bg='white')
+            canvas.grid(row=j, column=i)
+            canvas.bind("<Button-1>", lambda e, r=j, c=i: play_move(r, c, matrix, root, pixel, gridsize))
+            
+    tk.Button(root, image=pixel, width=100, height=100, text="back", compound="center", command=lambda: return_menu(root, pixel)).place(relx=0.2, rely=0.5, anchor=tk.CENTER)
     frm.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
-    
-    return frm
