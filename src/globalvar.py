@@ -1,3 +1,4 @@
 gridsize = 3
 matrix = None
-TARGET_NUM = 3
+target_num = 3
+current_player = 'x'
