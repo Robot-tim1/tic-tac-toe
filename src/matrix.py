@@ -1,5 +1,3 @@
-from globalvar import *
-
 def matrix_set(r, c, matrix, current_player):
     if matrix[r][c] == 0 and current_player == 'x':
         matrix[r][c] = 1
@@ -14,7 +12,7 @@ def print_matrix(matrix):
     for row in matrix:
         print(row)
 
-def check_win(matrix, gridsize):
+def check_win(matrix, gridsize, target_num):
     full_board = True
 
     for r in range(gridsize):
