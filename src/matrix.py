@@ -12,73 +12,50 @@ def print_matrix(matrix):
     for row in matrix:
         print(row)
 
-def check_win(matrix, gridsize, target_num):
+def flip_pieces(matrix, gridsize):
+    for r in range(gridsize):
+        for c in range(gridsize):
+            if matrix[r][c] == 1:
+                matrix[r][c] = 2
+            elif matrix[r][c] == 2:
+                matrix[r][c] = 1
+
+def drop_pieces(matrix, gridsize):
+    for r in range(gridsize - 2, -1, -1):
+        for c in range(gridsize):
+            if matrix[r][c] != 0:
+                drop_zone = None
+                for drop in range(r + 1, gridsize):
+                    if matrix[drop][c] == 0:
+                        drop_zone = drop
+                    else:
+                        break
+                if drop_zone != None:
+                    matrix[drop_zone][c] = matrix[r][c]
+                    matrix[r][c] = 0
+
+def lift_pieces(matrix, gridsize):
+    for r in range(gridsize):
+        for c in range(gridsize):
+            if matrix[r][c] != 0:
+                lift_zone = None
+                for lift in range(r - 1, -1, -1):
+                    if matrix[lift][c] == 0:
+                        lift_zone = lift
+                    else:
+                        break
+                if lift_zone != None:
+                    matrix[lift_zone][c] = matrix[r][c]
+                    matrix[r][c] = 0
+
+def check_full(matrix, gridsize):
     full_board = True
 
     for r in range(gridsize):
         for c in range(gridsize):
             if matrix[r][c] == 0:
                 full_board = False
-                continue
             
-            target = target_num
-            
-            if matrix[r][c] == 2:
-                target = target_num * 2
-            
-            if target_num == 3:
-                try:
-                    if (matrix[r][c] + matrix[r][c+1] + matrix[r][c+2] == target and 
-                        matrix[r][c+1] != 0 and matrix[r][c+2] != 0):
-                        return 1
-                except IndexError:
-                    pass
-                try:
-                    if (matrix[r][c] + matrix[r+1][c] + matrix[r+2][c] == target and 
-                        matrix[r+1][c] != 0 and matrix[r+2][c] != 0):
-                        return 1
-                except IndexError:
-                    pass
-                try:
-                    if (matrix[r][c] + matrix[r+1][c+1] + matrix[r+2][c+2] == target 
-                        and matrix[r+1][c+1] != 0 and matrix[r+2][c+2] != 0):
-                        return 1
-                except IndexError:
-                    pass
-                try:
-                    if (matrix[r][c] + matrix[r+1][c-1] + matrix[r+2][c-2] == target and 
-                        c - 2 >= 0 and matrix[r+1][c-1] != 0 and matrix[r+2][c-2] != 0):
-                        return 1
-                except IndexError:
-                    pass
-
-            elif target_num == 4:
-                try:
-                    if (matrix[r][c] + matrix[r][c+1] + matrix[r][c+2] + matrix[r][c+3] == target and 
-                        matrix[r][c+1] != 0 and matrix[r][c+2] != 0 and matrix[r][c+3] != 0):
-                        return 1
-                except IndexError:
-                    pass
-                try:
-                    if (matrix[r][c] + matrix[r+1][c] + matrix[r+2][c] + matrix[r+3][c] == target and 
-                        matrix[r+1][c] != 0 and matrix[r+2][c] != 0 and matrix[r+3][c] != 0):
-                        return 1
-                except IndexError:
-                    pass
-                try:
-                    if (matrix[r][c] + matrix[r+1][c+1] + matrix[r+2][c+2] + matrix[r+3][c+3] == target and 
-                        matrix[r+1][c+1] != 0 and matrix[r+2][c+2] != 0 and matrix[r+3][c+3] != 0):
-                        return 1
-                except IndexError:
-                    pass
-                try:
-                    if (matrix[r][c] + matrix[r+1][c-1] + matrix[r+2][c-2] + matrix[r+3][c-3] == target and 
-                        c - 3 >= 0 and matrix[r+1][c-1] != 0 and matrix[r+2][c-2] != 0 and matrix[r+3][c-3] != 0):
-                        return 1
-                except IndexError:
-                    pass                
-            else:
-                raise ValueError("target_num not 3 or 4")
     if full_board == True:
-        return 2
-    return 0
+        return True
+    return False

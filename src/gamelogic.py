@@ -2,7 +2,12 @@ import tkinter as tk
 from tkinter import ttk
 
 from matrix import *
-from globalvar import *
+
+gridsize = 4
+matrix = None
+target_num = 4
+current_player = 'x'
+running = False
 
 def playgame(root, pixel):
     global current_player
@@ -49,46 +54,29 @@ def destroy_window_menu_return(root, window):
     return_menu(root)
     window.destroy()
 
-def play_move(r, c, matrix, root, gridsize):
+def play_move(r, c, root):
     global current_player
     global target_num
-    
+    global matrix
+    global gridsize
+
     if not matrix_set(r, c, matrix, current_player):
         return
     
     frm = get_frame(root)
-    update_board(matrix, frm, gridsize)
-
-    result = check_win(matrix, gridsize, target_num)
-    text = 'dummy text'
-    if result == 1:   
-        for children in frm.winfo_children(): # type: ignore
-            children.unbind('<Button-1>')
-        
-        if current_player == 'x':
-            text = "X WINS!"
-        elif current_player == 'o':
-            text = "O WINS!"
-        
-        win_window = tk.Toplevel(root)
-        win_window.geometry('200x200')
-        win_window.configure(bg='#333333')
-        root.eval(f'tk::PlaceWindow {str(win_window)} center')    
-        tk.Label(win_window, text=text, bg='#333333', fg='white').place(relx=0.5, rely=0.2, anchor=tk.CENTER)
-        tk.Button(win_window, text="Back", compound="center", command=lambda: destroy_window_menu_return(root, win_window)).place(relx=0.5, rely=0.8, anchor=tk.CENTER)
-        return
+    update_board(frm)
+    result = 0
     
-    elif result == 2:
-        for children in frm.winfo_children(): # type: ignore
-            children.unbind('<Button-1>')
-        text = 'TIE!'
-          
-        win_window = tk.Toplevel(root)
-        win_window.geometry('200x200')
-        win_window.configure(bg='#333333')
-        root.eval(f'tk::PlaceWindow {str(win_window)} center')
-        tk.Label(win_window, text=text, bg='#333333', fg='white').place(relx=0.5, rely=0.2, anchor=tk.CENTER)
-        tk.Button(win_window, text="Back", compound="center", command=lambda: destroy_window_menu_return(root, win_window)).place(relx=0.5, rely=0.8, anchor=tk.CENTER)
+    if check_full(matrix, gridsize):
+        result = 2
+    
+    if return_if_won(frm, 'X') or return_if_won(frm, 'O'):
+        if return_if_won(frm, 'X') and return_if_won(frm, 'O'):
+            result = 2
+        else:
+            result = 1
+    
+    if win_state(root, frm, result):
         return
     
     if current_player == 'x':
@@ -99,31 +87,115 @@ def play_move(r, c, matrix, root, gridsize):
     show_player = tk.Label(root, text=f"Current Player is {current_player.upper()}")
     show_player.place(relx=0.2, rely=0.1, anchor=tk.CENTER)
 
+def win_state(root, frm, result):
+    global current_player
+    
+    if result == 1 or result == 2:   
+        text = 'dummy text'
+        for children in frm.winfo_children():
+            children.unbind('<Button-1>')
+        win_window = tk.Toplevel(root)
+        win_window.geometry('200x200')
+        win_window.configure(bg='#333333')
+        root.eval(f'tk::PlaceWindow {str(win_window)} center')    
+        tk.Button(win_window, text="Back", compound="center", command=lambda: destroy_window_menu_return(root, win_window)).place(relx=0.5, rely=0.8, anchor=tk.CENTER)
+        
+        if result == 1:
+            if return_if_won(frm, 'X'):
+                text = "X WINS!"
+            elif return_if_won(frm, 'O'):
+                text = "O WINS!"
+        else:
+            text = 'TIE!'
+        
+        tk.Label(win_window, text=text, bg='#333333', fg='white').place(relx=0.5, rely=0.2, anchor=tk.CENTER)
+        return True
+
 def get_frame(root):
     for children in root.winfo_children():
         if isinstance(children, ttk.Frame):
             return children
 
-def update_board(matrix, frm, gridsize):
+def return_if_won(frm, player):
+    global gridsize
+    global target_num
+
+    for r in range(gridsize):
+        for c in range(gridsize):
+            if not (frm.grid_slaves(r, c)):
+                continue
+            elif not (frm.grid_slaves(r, c))[0].find_withtag(player):
+                continue
+            
+            if target_num == 4:
+                try:
+                    if ((frm.grid_slaves(r, c))[0].find_withtag(player) and 
+                        (frm.grid_slaves(r, c+1))[0].find_withtag(player) and
+                        (frm.grid_slaves(r, c+2))[0].find_withtag(player) and 
+                        (frm.grid_slaves(r, c+3))[0].find_withtag(player)):
+                        return True
+                except IndexError:
+                    pass
+                try:
+                    if ((frm.grid_slaves(r, c))[0].find_withtag(player) and 
+                        (frm.grid_slaves(r+1, c))[0].find_withtag(player) and
+                        (frm.grid_slaves(r+2, c))[0].find_withtag(player) and 
+                        (frm.grid_slaves(r+3, c))[0].find_withtag(player)):
+                        return True
+                except IndexError:
+                    pass
+                try:
+                    if ((frm.grid_slaves(r, c))[0].find_withtag(player) and 
+                        (frm.grid_slaves(r+1, c+1))[0].find_withtag(player) and
+                        (frm.grid_slaves(r+2, c+2))[0].find_withtag(player) and 
+                        (frm.grid_slaves(r+3, c+3))[0].find_withtag(player)):
+                        return True
+                except IndexError:
+                    pass
+                try:
+                    if c - 3 >= 0:
+                        if ((frm.grid_slaves(r, c))[0].find_withtag(player) and 
+                            (frm.grid_slaves(r+1, c-1))[0].find_withtag(player) and
+                            (frm.grid_slaves(r+2, c-2))[0].find_withtag(player) and 
+                            (frm.grid_slaves(r+3, c-3))[0].find_withtag(player)):
+                            return True
+                except IndexError:
+                    pass
+
+def update_board(frm):
     global red_x
     global blue_o
+    global matrix
+    global gridsize
+    
+    if matrix == None:
+        return  
     for r in range(gridsize):
         for c in range(gridsize):
             if matrix[r][c] == 0:
+                canvas = (frm.grid_slaves(r, c))[0]
+                if canvas.find_withtag('O') or canvas.find_withtag('X'):
+                    canvas.delete('all')
                 continue
 
             if matrix[r][c] == 1:
                 canvas = (frm.grid_slaves(r, c))[0]
-                canvas.create_image(4, 3, anchor=tk.NW, image=red_x)
+                if canvas.find_withtag('O'):
+                    canvas.delete('O')
+                canvas.create_image(4, 3, anchor=tk.NW, image=red_x, tag='X')
 
             if matrix[r][c] == 2:
                 canvas = (frm.grid_slaves(r, c))[0]
-                canvas.create_image(3, 4, anchor=tk.NW, image=blue_o)
+                if canvas.find_withtag('X'):
+                    canvas.delete('X')
+                canvas.create_image(3, 4, anchor=tk.NW, image=blue_o, tag='O')
 
 def grow_grid(root):
     global gridsize
+    global target_num
     gridsize += 2
-    
+    target_num = 5
+
     for widget in root.winfo_children():
         widget.destroy()
     
@@ -151,6 +223,28 @@ def place_grid(root):
         for j in range(gridsize):
             canvas = tk.Canvas(frm, width=100, height=100, bg='white')
             canvas.grid(row=j, column=i)
-            canvas.bind("<Button-1>", lambda e, r=j, c=i: play_move(r, c, matrix, root, gridsize))
-            
+            canvas.bind("<Button-1>", lambda e, r=j, c=i: play_move(r, c, root))
+    
+    tk.Button(root, text='test', command=lambda: matrix_func_update(lift_pieces, root)).place(relx=0.2, rely=0.5, anchor=tk.CENTER)
     frm.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
+
+def matrix_func_update(func, root):
+    global matrix
+    global gridsize
+    global target_num
+
+    func(matrix, gridsize)
+    frm = get_frame(root)
+    update_board(frm)
+    result = 0
+    
+    if check_full(matrix, gridsize):
+        result = 2
+    
+    if return_if_won(frm, 'X') or return_if_won(frm, 'O'):
+        if return_if_won(frm, 'X') and return_if_won(frm, 'O'):
+            result = 2
+        else:
+            result = 1 
+    
+    win_state(root, frm, result)
