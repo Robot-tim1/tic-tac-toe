@@ -19,7 +19,6 @@ def main():
     root.title("Tic-Tac-Toe")
     root.configure(bg='#333333')
     center_window(root)
-    root.geometry()
     start_menu(root)
 
 if __name__ == "__main__":

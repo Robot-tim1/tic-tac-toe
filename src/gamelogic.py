@@ -64,16 +64,16 @@ def play_move(r, c, matrix, root, gridsize):
     if result == 1:   
         for children in frm.winfo_children(): # type: ignore
             children.unbind('<Button-1>')
-        win_window = tk.Toplevel(root)
-        win_window.geometry('200x200')
-        win_window.configure(bg='#333333')
-        root.eval(f'tk::PlaceWindow {str(win_window)} center')
-
+        
         if current_player == 'x':
             text = "X WINS!"
         elif current_player == 'o':
             text = "O WINS!"
-            
+        
+        win_window = tk.Toplevel(root)
+        win_window.geometry('200x200')
+        win_window.configure(bg='#333333')
+        root.eval(f'tk::PlaceWindow {str(win_window)} center')    
         tk.Label(win_window, text=text, bg='#333333', fg='white').place(relx=0.5, rely=0.2, anchor=tk.CENTER)
         tk.Button(win_window, text="Back", compound="center", command=lambda: destroy_window_menu_return(root, win_window)).place(relx=0.5, rely=0.8, anchor=tk.CENTER)
         return
@@ -82,11 +82,11 @@ def play_move(r, c, matrix, root, gridsize):
         for children in frm.winfo_children(): # type: ignore
             children.unbind('<Button-1>')
         text = 'TIE!'
+          
         win_window = tk.Toplevel(root)
         win_window.geometry('200x200')
         win_window.configure(bg='#333333')
         root.eval(f'tk::PlaceWindow {str(win_window)} center')
-
         tk.Label(win_window, text=text, bg='#333333', fg='white').place(relx=0.5, rely=0.2, anchor=tk.CENTER)
         tk.Button(win_window, text="Back", compound="center", command=lambda: destroy_window_menu_return(root, win_window)).place(relx=0.5, rely=0.8, anchor=tk.CENTER)
         return
