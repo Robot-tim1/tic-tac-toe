@@ -48,6 +48,40 @@ def lift_pieces(matrix, gridsize):
                     matrix[lift_zone][c] = matrix[r][c]
                     matrix[r][c] = 0
 
+def push_left(matrix, gridsize):
+    for r in range(gridsize):
+        for c in range(gridsize):
+            if matrix[r][c] != 0:
+                if c < gridsize / 2:
+                    split_zone = None
+                    for split in range(c - 1, -1, -1):
+                        if matrix[r][split] == 0:
+                            split_zone = split
+                        else:
+                            break
+                    if split_zone != None:
+                        matrix[r][split_zone] = matrix[r][c]
+                        matrix[r][c] = 0
+
+def push_right(matrix, gridsize):
+    for r in range(gridsize):
+        for c in range(gridsize - 2, -1, -1):
+            if matrix[r][c] != 0:
+                if c >= gridsize / 2:
+                    split_zone = None
+                    for split in range(c + 1, gridsize):
+                        if matrix[r][split] == 0:
+                            split_zone = split
+                        else:
+                            break
+                    if split_zone != None:
+                        matrix[r][split_zone] = matrix[r][c]
+                        matrix[r][c] = 0
+
+def split_pieces(matrix, gridsize):
+    push_left(matrix, gridsize)
+    push_right(matrix, gridsize)
+
 def check_full(matrix, gridsize):
     full_board = True
 

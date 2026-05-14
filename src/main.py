@@ -1,18 +1,16 @@
 import tkinter as tk
-from tkinter import ttk
 
 from gamelogic import *
 
-def center_window(root, width=1280, height=720):
+def center_window(window, width=1280, height=720):
 
-    screen_width = root.winfo_screenwidth()
-    screen_height = root.winfo_screenheight()
-
+    screen_width = window.winfo_screenwidth()
+    screen_height = window.winfo_screenheight()
 
     x = (screen_width // 2) - (width // 2)
     y = (screen_height // 2) - (height // 2)
 
-    root.geometry(f'{width}x{height}+{x}+{y}')
+    window.geometry(f'{width}x{height}+{x}+{y}')
 
 def main():
     root = tk.Tk()
@@ -20,6 +18,7 @@ def main():
     root.configure(bg='#333333')
     center_window(root)
     start_menu(root)
+    root.mainloop()
 
 if __name__ == "__main__":
     main()
