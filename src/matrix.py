@@ -1,3 +1,5 @@
+import random
+
 def matrix_set(r, c, matrix, current_player):
     if matrix[r][c] == 0 and current_player == 'x':
         matrix[r][c] = 1
@@ -23,64 +25,102 @@ def flip_pieces(matrix, gridsize):
 def drop_pieces(matrix, gridsize):
     for r in range(gridsize - 2, -1, -1):
         for c in range(gridsize):
-            if matrix[r][c] != 0:
-                drop_zone = None
-                for drop in range(r + 1, gridsize):
-                    if matrix[drop][c] == 0:
-                        drop_zone = drop
-                    else:
-                        break
-                if drop_zone != None:
-                    matrix[drop_zone][c] = matrix[r][c]
-                    matrix[r][c] = 0
+            if matrix[r][c] == 0 or matrix[r][c] == 3:
+                continue
+            drop_zone = None
+            for drop in range(r + 1, gridsize):
+                if matrix[drop][c] == 0:
+                    drop_zone = drop
+                else:
+                    break
+            if drop_zone != None:
+                matrix[drop_zone][c] = matrix[r][c]
+                matrix[r][c] = 0
 
 def lift_pieces(matrix, gridsize):
     for r in range(gridsize):
         for c in range(gridsize):
-            if matrix[r][c] != 0:
-                lift_zone = None
-                for lift in range(r - 1, -1, -1):
-                    if matrix[lift][c] == 0:
-                        lift_zone = lift
-                    else:
-                        break
-                if lift_zone != None:
-                    matrix[lift_zone][c] = matrix[r][c]
-                    matrix[r][c] = 0
+            if matrix[r][c] == 0 or matrix[r][c] == 3:
+                continue
+            lift_zone = None
+            for lift in range(r - 1, -1, -1):
+                if matrix[lift][c] == 0:
+                    lift_zone = lift
+                else:
+                    break
+            if lift_zone != None:
+                matrix[lift_zone][c] = matrix[r][c]
+                matrix[r][c] = 0
 
 def push_left(matrix, gridsize):
     for r in range(gridsize):
         for c in range(gridsize):
-            if matrix[r][c] != 0:
-                if c < gridsize / 2:
-                    split_zone = None
-                    for split in range(c - 1, -1, -1):
-                        if matrix[r][split] == 0:
-                            split_zone = split
-                        else:
-                            break
-                    if split_zone != None:
-                        matrix[r][split_zone] = matrix[r][c]
-                        matrix[r][c] = 0
+            if matrix[r][c] == 0 or matrix[r][c] == 3:
+                continue
+            if c >= gridsize / 2:
+                continue  
+            split_zone = None
+            for split in range(c - 1, -1, -1):
+                if matrix[r][split] == 0:
+                    split_zone = split
+                else:
+                    break
+            if split_zone != None:
+                matrix[r][split_zone] = matrix[r][c]
+                matrix[r][c] = 0
 
 def push_right(matrix, gridsize):
     for r in range(gridsize):
         for c in range(gridsize - 2, -1, -1):
-            if matrix[r][c] != 0:
-                if c >= gridsize / 2:
-                    split_zone = None
-                    for split in range(c + 1, gridsize):
-                        if matrix[r][split] == 0:
-                            split_zone = split
-                        else:
-                            break
-                    if split_zone != None:
-                        matrix[r][split_zone] = matrix[r][c]
-                        matrix[r][c] = 0
+            if matrix[r][c] == 0 or matrix[r][c] == 3:
+                continue
+            if c < gridsize / 2:
+                continue
+            split_zone = None
+            for split in range(c + 1, gridsize):
+                if matrix[r][split] == 0:
+                    split_zone = split
+                else:
+                    break
+            if split_zone != None:
+                matrix[r][split_zone] = matrix[r][c]
+                matrix[r][c] = 0
 
 def split_pieces(matrix, gridsize):
     push_left(matrix, gridsize)
     push_right(matrix, gridsize)
+
+def place_rock(matrix, gridsize):
+    empty_spots = get_empty(matrix, gridsize)
+    rock_spot = random.choice(empty_spots)
+    matrix[rock_spot[0]][rock_spot[1]] = 3
+
+def place_piece(matrix, gridsize):
+    empty_spots = get_empty(matrix, gridsize)
+    place_space = random.choice(empty_spots)
+    number = random.randint(1, 2)
+    matrix[place_space[0]][place_space[1]] = number
+
+def delete_random(matrix, gridsize):
+    placed_spaces = get_placed(matrix, gridsize)
+    random_spot = random.choice(placed_spaces)
+    matrix[random_spot[0]][random_spot[1]] = 0
+
+def get_empty(matrix, gridsize) -> list[tuple[int, int]]:
+    empty_spots = []
+    for r in range(gridsize):
+        for c in range(gridsize):
+            if matrix[r][c] == 0:
+                empty_spots.append((r, c))
+    return empty_spots
+
+def get_placed(matrix, gridsize) -> list[tuple[int, int]]:
+    placed_spots = []
+    for r in range(gridsize):
+        for c in range(gridsize):
+            if matrix[r][c] != 0 and matrix[r][c] != 3:
+                placed_spots.append((r, c))
+    return placed_spots
 
 def check_full(matrix, gridsize):
     full_board = True
