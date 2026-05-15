@@ -106,6 +106,28 @@ def delete_random(matrix, gridsize):
     random_spot = random.choice(placed_spaces)
     matrix[random_spot[0]][random_spot[1]] = 0
 
+def shuffle_pieces(matrix, gridsize):
+    x_list = []
+    o_list = []
+    for r in range(gridsize):
+        for c in range(gridsize):
+            if matrix[r][c] == 1:
+                x_list.append(1)
+                matrix[r][c] = 0
+            elif matrix[r][c] == 2:
+                o_list.append(2)
+                matrix[r][c] = 0
+    empty_spaces = get_empty(matrix, gridsize)
+    while x_list or o_list:
+        random_space = random.choice(empty_spaces)
+        random_piece = random.randint(1, 2)
+        if random_piece == 1 and x_list:
+            matrix[random_space[0]][random_space[1]] = x_list.pop()
+            empty_spaces.remove(random_space)
+        elif random_piece == 2 and o_list:
+            matrix[random_space[0]][random_space[1]] = o_list.pop()
+            empty_spaces.remove(random_space)
+
 def get_empty(matrix, gridsize) -> list[tuple[int, int]]:
     empty_spots = []
     for r in range(gridsize):
@@ -119,6 +141,14 @@ def get_placed(matrix, gridsize) -> list[tuple[int, int]]:
     for r in range(gridsize):
         for c in range(gridsize):
             if matrix[r][c] != 0 and matrix[r][c] != 3:
+                placed_spots.append((r, c))
+    return placed_spots
+
+def get_placed_o(matrix, gridsize) -> list[tuple[int, int]]:
+    placed_spots = []
+    for r in range(gridsize):
+        for c in range(gridsize):
+            if matrix[r][c] == 2:
                 placed_spots.append((r, c))
     return placed_spots
 

@@ -5,12 +5,17 @@ import time
 from tkinter import ttk
 from enum import Enum
 from matrix import *
+from cpu import *
 
+font = 'Calibri 12 bold'
 gridsize = 4
 matrix = None
 target_num = 4
 current_player = 'x'
 rock_count = 0
+cpu_easy = False
+cpu_normal = False
+won = False
 
 class Random_Event(Enum):
     FLIP_PIECES = "Flip Pieces"
@@ -21,11 +26,12 @@ class Random_Event(Enum):
     PLACE_ROCK = "Place Rock"
     DELETE_RANDOM = "Delete Random"
     PLACE_PIECE = "Place Piece"
+    SHUFFLE_PIECES = "Shuffle Pieces"
 
 def start_menu(root):
     pixel = tk.PhotoImage(width=1, height=1)
-    tk.Button(root, image=pixel, width=150, height=50, text="Play", compound="center", command=lambda: playgame(root, pixel)).place(relx=0.5, rely=0.4, anchor=tk.CENTER)
-    tk.Button(root, image=pixel, width=150, height=50, text="Quit", compound="center", command=root.destroy).place(relx=0.5, rely=0.65, anchor=tk.CENTER)
+    tk.Button(root, image=pixel, width=150, height=50, text="Play", font=font, compound="center", command=lambda: pick_mode(root, pixel)).place(relx=0.5, y=324, anchor=tk.CENTER)
+    tk.Button(root, image=pixel, width=150, height=50, text="Quit", font=font, compound="center", command=root.destroy).place(relx=0.5, y=468, anchor=tk.CENTER)
     
     global red_x
     global blue_o
@@ -37,11 +43,37 @@ def start_menu(root):
 
     event_options = list(Random_Event)
     next_event = random.choice(event_options)
-    next_event_text = tk.StringVar(value=f"Next Event\n{next_event.value}")
+    next_event_text = tk.StringVar(value=f"Next Event:\n{next_event.value}")
     cur_player_text = tk.StringVar(value=f"Current Player is {current_player.upper()}")
     red_x = tk.PhotoImage(file='src/assets/images/tic-tac-toe-red-x.png')
     blue_o = tk.PhotoImage(file='src/assets/images/tic-tac-toe-blue-o.png')
     rock = tk.PhotoImage(file='src/assets/images/rock_graphic.png')
+
+def pick_mode(root, pixel):
+    for widget in root.winfo_children():
+        widget.destroy()
+    
+    tk.Button(root, image=pixel, width=150, height=50, text="2P Mode", font=font, compound="center", command=lambda: playgame(root, pixel)).place(relx=0.5, y=324, anchor=tk.CENTER)
+    tk.Button(root, image=pixel, width=150, height=50, text="CPU Mode", font=font, compound="center", command=lambda: pick_cpu(root, pixel)).place(relx=0.5, y=468, anchor=tk.CENTER)
+    tk.Button(root, image=pixel, width=150, height=50, text="Back", font=font, compound="center", command=lambda: return_menu(root)).place(relx=0.3, y=224, anchor=tk.CENTER)
+
+def pick_cpu(root, pixel):
+    for widget in root.winfo_children():
+        widget.destroy()
+
+    tk.Button(root, image=pixel, width=150, height=50, text="CPU Easy", font=font, compound="center", command=lambda: set_cpu_play(root, pixel, 1)).place(relx=0.5, y=324, anchor=tk.CENTER)
+    tk.Button(root, image=pixel, width=150, height=50, text="CPU Normal", font=font, compound="center", command=lambda: set_cpu_play(root, pixel, 2)).place(relx=0.5, y=468, anchor=tk.CENTER)
+    tk.Button(root, image=pixel, width=150, height=50, text="Back", font=font, compound="center", command=lambda: pick_mode(root, pixel)).place(relx=0.3, y=224, anchor=tk.CENTER)
+
+def set_cpu_play(root, pixel, cpu):
+    global cpu_easy
+    global cpu_normal
+    
+    if cpu == 1:
+        cpu_easy = True
+    elif cpu == 2:
+        cpu_normal = True
+    playgame(root, pixel)
 
 def return_menu(root):
     for widget in root.winfo_children():
@@ -51,31 +83,39 @@ def return_menu(root):
     global gridsize
     global current_player
     global target_num
-    
-    current_player = 'x'
+    global won
+    global rock_count
+    global cpu_easy
+    global cpu_normal
+
     gridsize = 4
     matrix = None
     target_num = 4
+    current_player = 'x'
+    rock_count = 0
+    cpu_easy = False
+    cpu_normal = False
+    won = False
 
     start_menu(root)
 
 def playgame(root, pixel):
-    global current_player
-    
     for widget in root.winfo_children():
         widget.destroy()
     
-    show_player = tk.Label(root, textvariable=cur_player_text)
-    show_event = tk.Label(root, textvariable=next_event_text)
+    show_player = tk.Label(root, textvariable=cur_player_text, font=font)
+    show_event = tk.Label(root, textvariable=next_event_text, font=font)
+    backdrop = tk.Canvas(root, width=200, height=120)
     
     place_grid(root)
-    show_player.place(relx=0.2, rely=0.1, anchor=tk.CENTER)
-    show_event.place(relx=0.8, rely=0.1, anchor=tk.CENTER)
+    backdrop.place(x=166, y=104, anchor=tk.CENTER)
+    show_player.place(x=166, y=72, anchor=tk.CENTER)
+    show_event.place(x=166, y=126, anchor=tk.CENTER)
+    show_player.tkraise(backdrop)
+    show_event.tkraise(backdrop)
 
 def do_event(root):
-    global next_event
     global event_options
-    global gridsize
     global rock_count
     
     if rock_count < gridsize - 2:
@@ -104,10 +144,10 @@ def do_event(root):
             matrix_func_update(delete_random, root)
         case Random_Event.PLACE_PIECE:
             matrix_func_update(place_piece, root)
+        case Random_Event.SHUFFLE_PIECES:
+            matrix_func_update(shuffle_pieces, root)
 
 def win_state(root, frm, result):
-    global current_player
-    
     if result == 1 or result == 2:   
         text = 'dummy text'
         for children in frm.winfo_children():
@@ -126,15 +166,16 @@ def win_state(root, frm, result):
         else:
             text = 'TIE!'
         
-        tk.Label(win_window, text=text, bg='#333333', fg='white').place(relx=0.5, rely=0.2, anchor=tk.CENTER)
+        tk.Label(win_window, text=text, bg='#333333', fg='white', font=font).place(relx=0.5, rely=0.2, anchor=tk.CENTER)
         return True
 
 def play_move(r, c, root):
     global current_player
-    global target_num
-    global matrix
-    global gridsize
     global next_event
+    global won
+    
+    if won:
+        return
 
     if not matrix_set(r, c, matrix, current_player):
         return
@@ -154,6 +195,7 @@ def play_move(r, c, root):
             result = 1
     
     if win_state(root, frm, result):
+        won = True
         return
     
     if current_player == 'x':
@@ -162,21 +204,23 @@ def play_move(r, c, root):
         current_player = 'x'
     
     root.update_idletasks()
-    
-    time.sleep(0.3)
+    time.sleep(0.7)
     do_event(root)
     
     next_event = random.choice(event_options)
-    next_event_text.set(f"Next Event\n{next_event.value}")
+    next_event_text.set(f"Next Event:\n{next_event.value}")
     cur_player_text.set(f"Current Player is {current_player.upper()}")
+    if (cpu_easy or cpu_normal) and current_player == 'o':
+        root.update_idletasks()
+        time.sleep(1)
+        move = (0, 0)
+        if cpu_easy:
+            move = cpu_easy_move(matrix, gridsize)
+        elif cpu_normal:
+            move = cpu_normal_move(matrix, gridsize)
+        play_move(move[0], move[1], root)
 
 def update_board(frm):
-    global red_x
-    global blue_o
-    global rock
-    global matrix
-    global gridsize
-    
     if matrix == None:
         return  
     for r in range(gridsize):
@@ -205,95 +249,41 @@ def update_board(frm):
                     canvas.create_image(3, 4, anchor=tk.NW, image=rock, tag='rock')
 
 def return_if_won(frm, player):
-    global gridsize
-    global target_num
-
+    directions = [(0, 1), (1, 0), (1, 1), (1, -1)]
     for r in range(gridsize):
         for c in range(gridsize):
             if not (frm.grid_slaves(r, c)):
                 continue
             elif not (frm.grid_slaves(r, c))[0].find_withtag(player):
                 continue
-            
-            if target_num == 4:
-                try:
-                    if ((frm.grid_slaves(r, c))[0].find_withtag(player) and 
-                        (frm.grid_slaves(r, c+1))[0].find_withtag(player) and
-                        (frm.grid_slaves(r, c+2))[0].find_withtag(player) and 
-                        (frm.grid_slaves(r, c+3))[0].find_withtag(player)):
-                        return True
-                except IndexError:
-                    pass
-                try:
-                    if ((frm.grid_slaves(r, c))[0].find_withtag(player) and 
-                        (frm.grid_slaves(r+1, c))[0].find_withtag(player) and
-                        (frm.grid_slaves(r+2, c))[0].find_withtag(player) and 
-                        (frm.grid_slaves(r+3, c))[0].find_withtag(player)):
-                        return True
-                except IndexError:
-                    pass
-                try:
-                    if ((frm.grid_slaves(r, c))[0].find_withtag(player) and 
-                        (frm.grid_slaves(r+1, c+1))[0].find_withtag(player) and
-                        (frm.grid_slaves(r+2, c+2))[0].find_withtag(player) and 
-                        (frm.grid_slaves(r+3, c+3))[0].find_withtag(player)):
-                        return True
-                except IndexError:
-                    pass
-                try:
-                    if c - 3 >= 0:
-                        if ((frm.grid_slaves(r, c))[0].find_withtag(player) and 
-                            (frm.grid_slaves(r+1, c-1))[0].find_withtag(player) and
-                            (frm.grid_slaves(r+2, c-2))[0].find_withtag(player) and 
-                            (frm.grid_slaves(r+3, c-3))[0].find_withtag(player)):
-                            return True
-                except IndexError:
-                    pass
-            elif target_num == 5:
-                try:
-                    if ((frm.grid_slaves(r, c))[0].find_withtag(player) and 
-                        (frm.grid_slaves(r, c+1))[0].find_withtag(player) and
-                        (frm.grid_slaves(r, c+2))[0].find_withtag(player) and 
-                        (frm.grid_slaves(r, c+3))[0].find_withtag(player) and
-                        (frm.grid_slaves(r, c+4))[0].find_withtag(player)):
-                        return True
-                except IndexError:
-                    pass
-                try:
-                    if ((frm.grid_slaves(r, c))[0].find_withtag(player) and 
-                        (frm.grid_slaves(r+1, c))[0].find_withtag(player) and
-                        (frm.grid_slaves(r+2, c))[0].find_withtag(player) and 
-                        (frm.grid_slaves(r+3, c))[0].find_withtag(player) and
-                        (frm.grid_slaves(r+4, c))[0].find_withtag(player)):
-                        return True
-                except IndexError:
-                    pass
-                try:
-                    if ((frm.grid_slaves(r, c))[0].find_withtag(player) and 
-                        (frm.grid_slaves(r+1, c+1))[0].find_withtag(player) and
-                        (frm.grid_slaves(r+2, c+2))[0].find_withtag(player) and 
-                        (frm.grid_slaves(r+3, c+3))[0].find_withtag(player) and
-                        (frm.grid_slaves(r+4, c+4))[0].find_withtag(player)):
-                        return True
-                except IndexError:
-                    pass
-                try:
-                    if c - 4 >= 0:
-                        if ((frm.grid_slaves(r, c))[0].find_withtag(player) and 
-                            (frm.grid_slaves(r+1, c-1))[0].find_withtag(player) and
-                            (frm.grid_slaves(r+2, c-2))[0].find_withtag(player) and 
-                            (frm.grid_slaves(r+3, c-3))[0].find_withtag(player) and
-                            (frm.grid_slaves(r+4, c-4))[0].find_withtag(player)):
-                            return True
-                except IndexError:
-                    pass
+            for dr, dc in directions:
+                if target_num == 4:
+                    try:
+                        if c - 3 >= 0 or dc != -1:
+                            if ((frm.grid_slaves(r, c))[0].find_withtag(player) and 
+                                (frm.grid_slaves(r+dr, c+dc))[0].find_withtag(player) and
+                                (frm.grid_slaves(r+(dr*2), c+(dc*2)))[0].find_withtag(player) and 
+                                (frm.grid_slaves(r+(dr*3), c+(dc*3)))[0].find_withtag(player)):
+                                return True
+                    except IndexError:
+                        pass
+                elif target_num == 5:
+                    try:
+                        if c - 4 >= 0 or dc != -1:
+                            if ((frm.grid_slaves(r, c))[0].find_withtag(player) and 
+                                (frm.grid_slaves(r+dr, c+dc))[0].find_withtag(player) and
+                                (frm.grid_slaves(r+(dr*2), c+(dc*2)))[0].find_withtag(player) and 
+                                (frm.grid_slaves(r+(dr*3), c+(dc*3)))[0].find_withtag(player) and
+                                (frm.grid_slaves(r+(dr*4), c+(dc*4)))[0].find_withtag(player)):
+                                return True
+                    except IndexError:
+                        pass
 
 def place_grid(root):
     frm = ttk.Frame(root)
     frm.grid()
     
     global matrix
-    global gridsize
     
     if not matrix:
         matrix = [[0 for _ in range(gridsize)] for _ in range(gridsize)]
@@ -335,9 +325,6 @@ def grow_grid(root):
     update_board(frm)
 
 def matrix_func_update(func, root):
-    global matrix
-    global gridsize
-
     func(matrix, gridsize)
     frm = get_frame(root)
     update_board(frm)
