@@ -24,9 +24,10 @@ class Random_Event(Enum):
     LIFT_PIECES = "Lift Pieces"
     SPLIT_PIECES = "Split Pieces"
     PLACE_ROCK = "Place Rock"
-    DELETE_RANDOM = "Delete Random"
+    DELETE_RANDOM = "Delete Piece"
     PLACE_PIECE = "Place Piece"
     SHUFFLE_PIECES = "Shuffle Pieces"
+    GO_AGAIN = "Go Again"
 
 def start_menu(root):
     pixel = tk.PhotoImage(width=1, height=1)
@@ -53,17 +54,17 @@ def pick_mode(root, pixel):
     for widget in root.winfo_children():
         widget.destroy()
     
-    tk.Button(root, image=pixel, width=150, height=50, text="2P Mode", font=font, compound="center", command=lambda: playgame(root, pixel)).place(relx=0.5, y=324, anchor=tk.CENTER)
-    tk.Button(root, image=pixel, width=150, height=50, text="CPU Mode", font=font, compound="center", command=lambda: pick_cpu(root, pixel)).place(relx=0.5, y=468, anchor=tk.CENTER)
-    tk.Button(root, image=pixel, width=150, height=50, text="Back", font=font, compound="center", command=lambda: return_menu(root)).place(relx=0.3, y=224, anchor=tk.CENTER)
+    tk.Button(root, image=pixel, width=150, height=50, text="2P Mode", font=font, compound="center", command=lambda: playgame(root, pixel)).place(relx=0.6, y=324, anchor=tk.CENTER)
+    tk.Button(root, image=pixel, width=150, height=50, text="CPU Mode", font=font, compound="center", command=lambda: pick_cpu(root, pixel)).place(relx=0.4, y=324, anchor=tk.CENTER)
+    tk.Button(root, image=pixel, width=150, height=50, text="Back", font=font, compound="center", command=lambda: return_menu(root)).place(relx=0.5, y=468, anchor=tk.CENTER)
 
 def pick_cpu(root, pixel):
     for widget in root.winfo_children():
         widget.destroy()
 
-    tk.Button(root, image=pixel, width=150, height=50, text="CPU Easy", font=font, compound="center", command=lambda: set_cpu_play(root, pixel, 1)).place(relx=0.5, y=324, anchor=tk.CENTER)
-    tk.Button(root, image=pixel, width=150, height=50, text="CPU Normal", font=font, compound="center", command=lambda: set_cpu_play(root, pixel, 2)).place(relx=0.5, y=468, anchor=tk.CENTER)
-    tk.Button(root, image=pixel, width=150, height=50, text="Back", font=font, compound="center", command=lambda: pick_mode(root, pixel)).place(relx=0.3, y=224, anchor=tk.CENTER)
+    tk.Button(root, image=pixel, width=150, height=50, text="CPU Easy", font=font, compound="center", command=lambda: set_cpu_play(root, pixel, 1)).place(relx=0.4, y=324, anchor=tk.CENTER)
+    tk.Button(root, image=pixel, width=150, height=50, text="CPU Normal", font=font, compound="center", command=lambda: set_cpu_play(root, pixel, 2)).place(relx=0.6, y=324, anchor=tk.CENTER)
+    tk.Button(root, image=pixel, width=150, height=50, text="Back", font=font, compound="center", command=lambda: pick_mode(root, pixel)).place(relx=0.5, y=468, anchor=tk.CENTER)
 
 def set_cpu_play(root, pixel, cpu):
     global cpu_easy
@@ -117,7 +118,8 @@ def playgame(root, pixel):
 def do_event(root):
     global event_options
     global rock_count
-    
+    global current_player
+
     if rock_count < gridsize - 2:
         if Random_Event.PLACE_ROCK not in event_options:
             event_options.append(Random_Event.PLACE_ROCK)
@@ -146,6 +148,11 @@ def do_event(root):
             matrix_func_update(place_piece, root)
         case Random_Event.SHUFFLE_PIECES:
             matrix_func_update(shuffle_pieces, root)
+        case Random_Event.GO_AGAIN:
+            if current_player == 'x':
+                current_player = 'o'
+            elif current_player == 'o':
+                current_player = 'x'
 
 def win_state(root, frm, result):
     if result == 1 or result == 2:   
