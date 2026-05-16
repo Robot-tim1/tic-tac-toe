@@ -128,6 +128,22 @@ def shuffle_pieces(matrix, gridsize):
             matrix[random_space[0]][random_space[1]] = o_list.pop()
             empty_spaces.remove(random_space)
 
+def move_piece(matrix, gridsize):
+    placed = get_placed(matrix, gridsize)
+    empty_spaces = get_empty(matrix, gridsize)
+    piece = random.choice(placed)
+    new_space = random.choice(empty_spaces)
+    matrix[new_space[0]][new_space[1]] = matrix[piece[0]][piece[1]]
+    matrix[piece[0]][piece[1]] = 0
+    
+def delete_half(matrix, gridsize):
+    placed = get_placed(matrix, gridsize)
+    number_pieces = len(placed)
+    while len(placed) > number_pieces // 2:
+        random_piece = random.choice(placed)
+        matrix[random_piece[0]][random_piece[1]] = 0
+        placed.remove(random_piece)
+
 def get_empty(matrix, gridsize) -> list[tuple[int, int]]:
     empty_spots = []
     for r in range(gridsize):

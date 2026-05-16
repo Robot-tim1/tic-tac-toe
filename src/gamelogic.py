@@ -18,16 +18,18 @@ cpu_normal = False
 won = False
 
 class Random_Event(Enum):
+    MOVE_PIECE = "Move Piece"
+    PLACE_PIECE = "Place Piece"
+    DELETE_RANDOM = "Delete Piece"
     FLIP_PIECES = "Flip Pieces"
-    GROW_GRID = "Grow Grid"
     DROP_PIECES = "Drop Pieces"
     LIFT_PIECES = "Lift Pieces"
     SPLIT_PIECES = "Split Pieces"
-    PLACE_ROCK = "Place Rock"
-    DELETE_RANDOM = "Delete Piece"
-    PLACE_PIECE = "Place Piece"
     SHUFFLE_PIECES = "Shuffle Pieces"
     GO_AGAIN = "Go Again"
+    DELETE_HALF = "Snap"
+    PLACE_ROCK = "Place Rock"
+    GROW_GRID = "Grow Grid"
 
 def start_menu(root):
     pixel = tk.PhotoImage(width=1, height=1)
@@ -120,32 +122,24 @@ def do_event(root):
     global rock_count
     global current_player
 
-    if rock_count < gridsize - 2:
-        if Random_Event.PLACE_ROCK not in event_options:
-            event_options.append(Random_Event.PLACE_ROCK)
-    else:
-        if Random_Event.PLACE_ROCK in event_options:
-            event_options.remove(Random_Event.PLACE_ROCK)
-    
     match next_event:
+        case Random_Event.MOVE_PIECE:
+            matrix_func_update(move_piece, root)
+        case Random_Event.PLACE_PIECE:
+            matrix_func_update(place_piece, root)
+        case Random_Event.DELETE_RANDOM:
+            matrix_func_update(delete_random, root)
         case Random_Event.FLIP_PIECES:
             matrix_func_update(flip_pieces, root)
-        case Random_Event.GROW_GRID:
-            grow_grid(root)
-            event_options.remove(Random_Event.GROW_GRID)
+        case Random_Event.PLACE_ROCK:
+            matrix_func_update(place_rock, root)
+            rock_count += 1
         case Random_Event.DROP_PIECES:
             matrix_func_update(drop_pieces, root)
         case Random_Event.LIFT_PIECES:
             matrix_func_update(lift_pieces, root)
         case Random_Event.SPLIT_PIECES:
             matrix_func_update(split_pieces, root)
-        case Random_Event.PLACE_ROCK:
-            matrix_func_update(place_rock, root)
-            rock_count += 1
-        case Random_Event.DELETE_RANDOM:
-            matrix_func_update(delete_random, root)
-        case Random_Event.PLACE_PIECE:
-            matrix_func_update(place_piece, root)
         case Random_Event.SHUFFLE_PIECES:
             matrix_func_update(shuffle_pieces, root)
         case Random_Event.GO_AGAIN:
@@ -153,6 +147,18 @@ def do_event(root):
                 current_player = 'o'
             elif current_player == 'o':
                 current_player = 'x'
+        case Random_Event.DELETE_HALF:
+            matrix_func_update(delete_half, root)
+        case Random_Event.GROW_GRID:
+            grow_grid(root)
+            event_options.remove(Random_Event.GROW_GRID)
+    
+    if rock_count < gridsize - 2:
+        if Random_Event.PLACE_ROCK not in event_options:
+            event_options.append(Random_Event.PLACE_ROCK)
+    else:
+        if Random_Event.PLACE_ROCK in event_options:
+            event_options.remove(Random_Event.PLACE_ROCK)
 
 def win_state(root, frm, result):
     if result == 1 or result == 2:   
@@ -163,7 +169,7 @@ def win_state(root, frm, result):
         win_window.geometry('200x200')
         win_window.configure(bg='#333333')
         root.eval(f'tk::PlaceWindow {str(win_window)} center')    
-        tk.Button(win_window, text="Back", compound="center", command=lambda: destroy_window_menu_return(root, win_window)).place(relx=0.5, rely=0.8, anchor=tk.CENTER)
+        tk.Button(win_window, text="Back", compound="center", font=font, command=lambda: destroy_window_menu_return(root, win_window)).place(relx=0.5, rely=0.8, anchor=tk.CENTER)
         
         if result == 1:
             if return_if_won(frm, 'X'):
