@@ -25,9 +25,9 @@ With 12 unique events that could happen each round
 - Moves a Piece
 - Deletes a Piece
 - Places a Piece
-- Flip Pieces to make O's into X's
-- Drop all Pieces Down
-- Lift all Pieces Up
+- Flip Pieces to make O's into X's and vice versa
+- Drops all Pieces Down
+- Lifts all Pieces Up
 - Split Pieces to the left and right
 - Shuffle all placed pieces
 - Makes you go again
