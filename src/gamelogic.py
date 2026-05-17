@@ -16,6 +16,7 @@ rock_count = 0
 cpu_easy = False
 cpu_normal = False
 won = False
+event_weights = [13.5, 13, 12.5, 11, 10, 10, 7.5, 5, 3, 2, 7.5, 5]
 
 class Random_Event(Enum):
     MOVE_PIECE = "Move Piece"
@@ -36,6 +37,12 @@ def start_menu(root):
     tk.Button(root, image=pixel, width=150, height=50, text="Play", font=font, compound="center", command=lambda: pick_mode(root, pixel)).place(relx=0.5, y=324, anchor=tk.CENTER)
     tk.Button(root, image=pixel, width=150, height=50, text="Quit", font=font, compound="center", command=root.destroy).place(relx=0.5, y=468, anchor=tk.CENTER)
     
+    global title_screen
+    title_screen = tk.PhotoImage(file='src/assets/images/ttt-title-screen.png')
+    canvas = tk.Canvas(root, width=500, height=200, bg="#292828")
+    canvas.place(relx=0.5, y=150, anchor=tk.CENTER)
+    canvas.create_image(0, -6, anchor=tk.NW, image=title_screen)
+
     global red_x
     global blue_o
     global rock
@@ -45,7 +52,7 @@ def start_menu(root):
     global event_options
 
     event_options = list(Random_Event)
-    next_event = random.choice(event_options)
+    next_event = random.choices(event_options, weights=event_weights, k=1)[0]
     next_event_text = tk.StringVar(value=f"Next Event:\n{next_event.value}")
     cur_player_text = tk.StringVar(value=f"Current Player is {current_player.upper()}")
     red_x = tk.PhotoImage(file='src/assets/images/tic-tac-toe-red-x.png')
@@ -90,6 +97,7 @@ def return_menu(root):
     global rock_count
     global cpu_easy
     global cpu_normal
+    global event_weights
 
     gridsize = 4
     matrix = None
@@ -99,6 +107,7 @@ def return_menu(root):
     cpu_easy = False
     cpu_normal = False
     won = False
+    event_weights = [13.5, 13, 12.5, 11, 10, 10, 7.5, 5, 3, 2, 7.5, 5]
 
     start_menu(root)
 
@@ -121,6 +130,7 @@ def do_event(root):
     global event_options
     global rock_count
     global current_player
+    global event_weights
 
     match next_event:
         case Random_Event.MOVE_PIECE:
@@ -159,6 +169,13 @@ def do_event(root):
     else:
         if Random_Event.PLACE_ROCK in event_options:
             event_options.remove(Random_Event.PLACE_ROCK)
+
+    if len(event_options) == 11 and Random_Event.GROW_GRID in event_options:
+        event_weights = [13.5, 13, 12.5, 11, 10, 10, 10, 5, 3, 2, 10]
+    elif len(event_options) == 11 and Random_Event.PLACE_ROCK in event_options:
+        event_weights = [13, 13, 10.5, 11.5, 11, 11, 10, 5, 3, 2, 10]
+    elif len(event_options) == 10:
+        event_weights = [13.5, 13, 12.5, 13, 13, 13, 10, 5, 4, 3]
 
 def win_state(root, frm, result):
     if result == 1 or result == 2:   
@@ -220,7 +237,9 @@ def play_move(r, c, root):
     time.sleep(0.7)
     do_event(root)
     
-    next_event = random.choice(event_options)
+    last_event = next_event
+    while last_event == next_event:
+        next_event = random.choices(event_options, weights=event_weights, k=1)[0]
     next_event_text.set(f"Next Event:\n{next_event.value}")
     cur_player_text.set(f"Current Player is {current_player.upper()}")
     if (cpu_easy or cpu_normal) and current_player == 'o':
