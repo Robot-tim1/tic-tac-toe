@@ -1,6 +1,6 @@
 import tkinter as tk
 
-from gamelogic import *
+from gamelogic import Game
 
 def center_window(window, width=1280, height=720):
 
@@ -17,8 +17,8 @@ def main():
     root.title("Tic-Tac-Toe")
     root.configure(bg='#333333')
     center_window(root)
-    start_menu(root)
-    root.mainloop()
+    game = Game(root)
+    game.start()
 
 if __name__ == "__main__":
     main()

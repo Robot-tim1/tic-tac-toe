@@ -7,17 +7,6 @@ from enum import Enum
 from matrix import *
 from cpu import *
 
-font = 'Calibri 12 bold'
-gridsize = 4
-matrix = None
-target_num = 4
-current_player = 'x'
-rock_count = 0
-cpu_easy = False
-cpu_normal = False
-won = False
-event_weights = [13.5, 13, 12.5, 11, 10, 10, 7.5, 5, 3, 2, 7.5, 5]
-
 class Random_Event(Enum):
     MOVE_PIECE = "Move Piece"
     PLACE_PIECE = "Place Piece"
@@ -32,343 +21,332 @@ class Random_Event(Enum):
     PLACE_ROCK = "Place Rock"
     GROW_GRID = "Grow Grid"
 
-def start_menu(root):
-    pixel = tk.PhotoImage(width=1, height=1)
-    tk.Button(root, image=pixel, width=150, height=50, text="Play", font=font, compound="center", command=lambda: pick_mode(root, pixel)).place(relx=0.5, y=324, anchor=tk.CENTER)
-    tk.Button(root, image=pixel, width=150, height=50, text="Quit", font=font, compound="center", command=root.destroy).place(relx=0.5, y=468, anchor=tk.CENTER)
-    
-    global title_screen
-    title_screen = tk.PhotoImage(file='src/assets/images/ttt-title-screen.png')
-    canvas = tk.Canvas(root, width=500, height=200, bg="#292828")
-    canvas.place(relx=0.5, y=150, anchor=tk.CENTER)
-    canvas.create_image(0, -6, anchor=tk.NW, image=title_screen)
+class Game():
+    def __init__(self, root) -> None:
+        self.root = root
 
-    global red_x
-    global blue_o
-    global rock
-    global cur_player_text
-    global next_event
-    global next_event_text
-    global event_options
+        self.font = 'Calibri 12 bold'
+        self.gridsize = 4
+        self.matrix = None
+        self.target_num = 4
+        self.current_player = 'x'
+        self.rock_count = 0
+        self.cpu_easy = False
+        self.cpu_normal = False
+        self.won = False
+        self.event_weights = [13.5, 13, 12.5, 11, 10, 10, 7.5, 5, 3, 2, 7.5, 5]
 
-    event_options = list(Random_Event)
-    next_event = random.choices(event_options, weights=event_weights, k=1)[0]
-    next_event_text = tk.StringVar(value=f"Next Event:\n{next_event.value}")
-    cur_player_text = tk.StringVar(value=f"Current Player is {current_player.upper()}")
-    red_x = tk.PhotoImage(file='src/assets/images/tic-tac-toe-red-x.png')
-    blue_o = tk.PhotoImage(file='src/assets/images/tic-tac-toe-blue-o.png')
-    rock = tk.PhotoImage(file='src/assets/images/rock_graphic.png')
+        self.red_x = tk.PhotoImage(file='src/assets/images/tic-tac-toe-red-x.png')
+        self.blue_o = tk.PhotoImage(file='src/assets/images/tic-tac-toe-blue-o.png')
+        self.rock = tk.PhotoImage(file='src/assets/images/rock_graphic.png')
 
-def pick_mode(root, pixel):
-    for widget in root.winfo_children():
-        widget.destroy()
-    
-    tk.Button(root, image=pixel, width=150, height=50, text="2P Mode", font=font, compound="center", command=lambda: playgame(root, pixel)).place(relx=0.6, y=324, anchor=tk.CENTER)
-    tk.Button(root, image=pixel, width=150, height=50, text="CPU Mode", font=font, compound="center", command=lambda: pick_cpu(root, pixel)).place(relx=0.4, y=324, anchor=tk.CENTER)
-    tk.Button(root, image=pixel, width=150, height=50, text="Back", font=font, compound="center", command=lambda: return_menu(root)).place(relx=0.5, y=468, anchor=tk.CENTER)
+    def reset_values(self) -> None:
+        self.font = 'Calibri 12 bold'
+        self.gridsize = 4
+        self.matrix = None
+        self.target_num = 4
+        self.current_player = 'x'
+        self.rock_count = 0
+        self.cpu_easy = False
+        self.cpu_normal = False
+        self.won = False
+        self.event_weights = [13.5, 13, 12.5, 11, 10, 10, 7.5, 5, 3, 2, 7.5, 5]
 
-def pick_cpu(root, pixel):
-    for widget in root.winfo_children():
-        widget.destroy()
+    def start(self) -> None:
+        self.start_menu()
+        self.root.mainloop()
 
-    tk.Button(root, image=pixel, width=150, height=50, text="CPU Easy", font=font, compound="center", command=lambda: set_cpu_play(root, pixel, 1)).place(relx=0.4, y=324, anchor=tk.CENTER)
-    tk.Button(root, image=pixel, width=150, height=50, text="CPU Normal", font=font, compound="center", command=lambda: set_cpu_play(root, pixel, 2)).place(relx=0.6, y=324, anchor=tk.CENTER)
-    tk.Button(root, image=pixel, width=150, height=50, text="Back", font=font, compound="center", command=lambda: pick_mode(root, pixel)).place(relx=0.5, y=468, anchor=tk.CENTER)
-
-def set_cpu_play(root, pixel, cpu):
-    global cpu_easy
-    global cpu_normal
-    
-    if cpu == 1:
-        cpu_easy = True
-    elif cpu == 2:
-        cpu_normal = True
-    playgame(root, pixel)
-
-def return_menu(root):
-    for widget in root.winfo_children():
-        widget.destroy()
-    
-    global matrix
-    global gridsize
-    global current_player
-    global target_num
-    global won
-    global rock_count
-    global cpu_easy
-    global cpu_normal
-    global event_weights
-
-    gridsize = 4
-    matrix = None
-    target_num = 4
-    current_player = 'x'
-    rock_count = 0
-    cpu_easy = False
-    cpu_normal = False
-    won = False
-    event_weights = [13.5, 13, 12.5, 11, 10, 10, 7.5, 5, 3, 2, 7.5, 5]
-
-    start_menu(root)
-
-def playgame(root, pixel):
-    for widget in root.winfo_children():
-        widget.destroy()
-    
-    show_player = tk.Label(root, textvariable=cur_player_text, font=font)
-    show_event = tk.Label(root, textvariable=next_event_text, font=font)
-    backdrop = tk.Canvas(root, width=200, height=120)
-    
-    place_grid(root)
-    backdrop.place(x=166, y=104, anchor=tk.CENTER)
-    show_player.place(x=166, y=72, anchor=tk.CENTER)
-    show_event.place(x=166, y=126, anchor=tk.CENTER)
-    show_player.tkraise(backdrop)
-    show_event.tkraise(backdrop)
-
-def do_event(root):
-    global event_options
-    global rock_count
-    global current_player
-    global event_weights
-
-    match next_event:
-        case Random_Event.MOVE_PIECE:
-            matrix_func_update(move_piece, root)
-        case Random_Event.PLACE_PIECE:
-            matrix_func_update(place_piece, root)
-        case Random_Event.DELETE_RANDOM:
-            matrix_func_update(delete_random, root)
-        case Random_Event.FLIP_PIECES:
-            matrix_func_update(flip_pieces, root)
-        case Random_Event.PLACE_ROCK:
-            matrix_func_update(place_rock, root)
-            rock_count += 1
-        case Random_Event.DROP_PIECES:
-            matrix_func_update(drop_pieces, root)
-        case Random_Event.LIFT_PIECES:
-            matrix_func_update(lift_pieces, root)
-        case Random_Event.SPLIT_PIECES:
-            matrix_func_update(split_pieces, root)
-        case Random_Event.SHUFFLE_PIECES:
-            matrix_func_update(shuffle_pieces, root)
-        case Random_Event.GO_AGAIN:
-            if current_player == 'x':
-                current_player = 'o'
-            elif current_player == 'o':
-                current_player = 'x'
-        case Random_Event.DELETE_HALF:
-            matrix_func_update(delete_half, root)
-        case Random_Event.GROW_GRID:
-            grow_grid(root)
-            event_options.remove(Random_Event.GROW_GRID)
-    
-    if rock_count < gridsize - 2:
-        if Random_Event.PLACE_ROCK not in event_options:
-            event_options.append(Random_Event.PLACE_ROCK)
-    else:
-        if Random_Event.PLACE_ROCK in event_options:
-            event_options.remove(Random_Event.PLACE_ROCK)
-
-    if len(event_options) == 11 and Random_Event.GROW_GRID in event_options:
-        event_weights = [13.5, 13, 12.5, 11, 10, 10, 10, 5, 3, 2, 10]
-    elif len(event_options) == 11 and Random_Event.PLACE_ROCK in event_options:
-        event_weights = [13, 13, 10.5, 11.5, 11, 11, 10, 5, 3, 2, 10]
-    elif len(event_options) == 10:
-        event_weights = [13.5, 13, 12.5, 13, 13, 13, 10, 5, 4, 3]
-
-def win_state(root, frm, result):
-    if result == 1 or result == 2:   
-        text = 'dummy text'
-        for children in frm.winfo_children():
-            children.unbind('<Button-1>')
-        win_window = tk.Toplevel(root)
-        win_window.geometry('200x200')
-        win_window.configure(bg='#333333')
-        root.eval(f'tk::PlaceWindow {str(win_window)} center')    
-        tk.Button(win_window, text="Back", compound="center", font=font, command=lambda: destroy_window_menu_return(root, win_window)).place(relx=0.5, rely=0.8, anchor=tk.CENTER)
+    def start_menu(self):
+        self.pixel = tk.PhotoImage(width=1, height=1)
+        tk.Button(self.root, image=self.pixel, width=150, height=50, text="Play", font=self.font, compound="center", command=lambda: self.pick_mode()).place(relx=0.5, y=324, anchor=tk.CENTER)
+        tk.Button(self.root, image=self.pixel, width=150, height=50, text="Quit", font=self.font, compound="center", command=self.root.destroy).place(relx=0.5, y=468, anchor=tk.CENTER)
         
-        if result == 1:
-            if return_if_won(frm, 'X'):
-                text = "X WINS!"
-            elif return_if_won(frm, 'O'):
-                text = "O WINS!"
-        else:
-            text = 'TIE!'
+        self.title_screen = tk.PhotoImage(file='src/assets/images/ttt-title-screen.png')
+        canvas = tk.Canvas(self.root, width=500, height=200, bg="#292828")
+        canvas.place(relx=0.5, y=150, anchor=tk.CENTER)
+        canvas.create_image(0, -6, anchor=tk.NW, image=self.title_screen)
+
+        self.event_options = list(Random_Event)
+        self.next_event = random.choices(self.event_options, weights=self.event_weights, k=1)[0]
+        self.next_event_text = tk.StringVar(value=f"Next Event:\n{self.next_event.value}")
+        self.cur_player_text = tk.StringVar(value=f"Current Player is {self.current_player.upper()}")
+
+    def pick_mode(self):
+        for widget in self.root.winfo_children():
+            widget.destroy()
         
-        tk.Label(win_window, text=text, bg='#333333', fg='white', font=font).place(relx=0.5, rely=0.2, anchor=tk.CENTER)
-        return True
+        tk.Button(self.root, image=self.pixel, width=150, height=50, text="2P Mode", font=self.font, compound="center", command=lambda: self.playgame()).place(relx=0.6, y=324, anchor=tk.CENTER)
+        tk.Button(self.root, image=self.pixel, width=150, height=50, text="CPU Mode", font=self.font, compound="center", command=lambda: self.pick_cpu()).place(relx=0.4, y=324, anchor=tk.CENTER)
+        tk.Button(self.root, image=self.pixel, width=150, height=50, text="Back", font=self.font, compound="center", command=lambda: self.return_menu()).place(relx=0.5, y=468, anchor=tk.CENTER)
 
-def play_move(r, c, root):
-    global current_player
-    global next_event
-    global won
-    
-    if won:
-        return
+    def pick_cpu(self):
+        for widget in self.root.winfo_children():
+            widget.destroy()
 
-    if not matrix_set(r, c, matrix, current_player):
-        return
-    
-    frm = get_frame(root)
-    update_board(frm)
-    
-    result = 0
-    
-    if check_full(matrix, gridsize):
-        result = 2
-    
-    if return_if_won(frm, 'X') or return_if_won(frm, 'O'):
-        if return_if_won(frm, 'X') and return_if_won(frm, 'O'):
-            result = 2
+        tk.Button(self.root, image=self.pixel, width=150, height=50, text="CPU Easy", font=self.font, compound="center", command=lambda: self.set_cpu_play(1)).place(relx=0.4, y=324, anchor=tk.CENTER)
+        tk.Button(self.root, image=self.pixel, width=150, height=50, text="CPU Normal", font=self.font, compound="center", command=lambda: self.set_cpu_play(2)).place(relx=0.6, y=324, anchor=tk.CENTER)
+        tk.Button(self.root, image=self.pixel, width=150, height=50, text="Back", font=self.font, compound="center", command=lambda: self.pick_mode()).place(relx=0.5, y=468, anchor=tk.CENTER)
+
+    def set_cpu_play(self, cpu):  
+        if cpu == 1:
+            self.cpu_easy = True
+        elif cpu == 2:
+            self.cpu_normal = True
+        self.playgame()
+
+    def return_menu(self):
+        for widget in self.root.winfo_children():
+            widget.destroy()
+
+        self.reset_values()
+        self.start_menu()
+
+    def playgame(self):
+        for widget in self.root.winfo_children():
+            widget.destroy()
+        
+        show_player = tk.Label(self.root, textvariable=self.cur_player_text, font=self.font)
+        show_event = tk.Label(self.root, textvariable=self.next_event_text, font=self.font)
+        backdrop = tk.Canvas(self.root, width=200, height=120)
+        
+        self.place_grid()
+        backdrop.place(x=166, y=104, anchor=tk.CENTER)
+        show_player.place(x=166, y=72, anchor=tk.CENTER)
+        show_event.place(x=166, y=126, anchor=tk.CENTER)
+        show_player.tkraise(backdrop)
+        show_event.tkraise(backdrop)
+
+    def do_event(self):
+        match self.next_event:
+            case Random_Event.MOVE_PIECE:
+                self.matrix_func_update(move_piece)
+            case Random_Event.PLACE_PIECE:
+                self.matrix_func_update(place_piece)
+            case Random_Event.DELETE_RANDOM:
+                self.matrix_func_update(delete_random)
+            case Random_Event.FLIP_PIECES:
+                self.matrix_func_update(flip_pieces)
+            case Random_Event.PLACE_ROCK:
+                self.matrix_func_update(place_rock)
+                self.rock_count += 1
+            case Random_Event.DROP_PIECES:
+                self.matrix_func_update(drop_pieces)
+            case Random_Event.LIFT_PIECES:
+                self.matrix_func_update(lift_pieces)
+            case Random_Event.SPLIT_PIECES:
+                self.matrix_func_update(split_pieces)
+            case Random_Event.SHUFFLE_PIECES:
+                self.matrix_func_update(shuffle_pieces)
+            case Random_Event.GO_AGAIN:
+                if self.current_player == 'x':
+                    self.current_player = 'o'
+                elif self.current_player == 'o':
+                    self.current_player = 'x'
+            case Random_Event.DELETE_HALF:
+                self.matrix_func_update(delete_half)
+            case Random_Event.GROW_GRID:
+                self.grow_grid()
+                self.event_options.remove(Random_Event.GROW_GRID)
+        
+        if self.rock_count < self.gridsize - 2:
+            if Random_Event.PLACE_ROCK not in self.event_options:
+                self.event_options.append(Random_Event.PLACE_ROCK)
         else:
-            result = 1
-    
-    if win_state(root, frm, result):
-        won = True
-        return
-    
-    if current_player == 'x':
-        current_player = 'o'
-    elif current_player == 'o':
-        current_player = 'x'
-    
-    root.update_idletasks()
-    time.sleep(0.7)
-    do_event(root)
-    
-    last_event = next_event
-    while last_event == next_event:
-        next_event = random.choices(event_options, weights=event_weights, k=1)[0]
-    next_event_text.set(f"Next Event:\n{next_event.value}")
-    cur_player_text.set(f"Current Player is {current_player.upper()}")
-    if (cpu_easy or cpu_normal) and current_player == 'o':
-        root.update_idletasks()
-        time.sleep(1)
-        move = (0, 0)
-        if cpu_easy:
-            move = cpu_easy_move(matrix, gridsize)
-        elif cpu_normal:
-            move = cpu_normal_move(matrix, gridsize)
-        play_move(move[0], move[1], root)
+            if Random_Event.PLACE_ROCK in self.event_options:
+                self.event_options.remove(Random_Event.PLACE_ROCK)
 
-def update_board(frm):
-    if matrix == None:
-        return  
-    for r in range(gridsize):
-        for c in range(gridsize):
-            if matrix[r][c] == 0:
-                canvas = (frm.grid_slaves(r, c))[0]
-                if canvas.find_all():
-                    canvas.delete('all')
+        if len(self.event_options) == 11 and Random_Event.GROW_GRID in self.event_options:
+            self.event_weights = [13.5, 13, 12.5, 11, 10, 10, 10, 5, 3, 2, 10]
+        elif len(self.event_options) == 11 and Random_Event.PLACE_ROCK in self.event_options:
+            self.event_weights = [13, 13, 10.5, 11.5, 11, 11, 10, 5, 3, 2, 10]
+        elif len(self.event_options) == 10:
+            self.event_weights = [13.5, 13, 12.5, 13, 13, 13, 10, 5, 4, 3]
 
-            elif matrix[r][c] == 1:
-                canvas = (frm.grid_slaves(r, c))[0]
-                if not canvas.find_withtag('X'):
-                    canvas.delete('all')
-                    canvas.create_image(4, 3, anchor=tk.NW, image=red_x, tag='X')
-
-            elif matrix[r][c] == 2:
-                canvas = (frm.grid_slaves(r, c))[0]
-                if not canvas.find_withtag('O'):
-                    canvas.delete('all')
-                    canvas.create_image(3, 4, anchor=tk.NW, image=blue_o, tag='O')
+    def win_state(self, frm, result):
+        if result == 1 or result == 2:   
+            text = 'dummy text'
+            for children in frm.winfo_children():
+                children.unbind('<Button-1>')
+            win_window = tk.Toplevel(self.root)
+            win_window.geometry('200x200')
+            win_window.configure(bg='#333333')
+            self.root.eval(f'tk::PlaceWindow {str(win_window)} center')    
+            tk.Button(win_window, text="Back", compound="center", font=self.font, command=lambda: self.destroy_window_menu_return(win_window)).place(relx=0.5, rely=0.8, anchor=tk.CENTER)
             
-            elif matrix[r][c] == 3:
-                canvas = (frm.grid_slaves(r, c))[0]
-                if not canvas.find_withtag('rock'):
-                    canvas.delete('all')
-                    canvas.create_image(3, 4, anchor=tk.NW, image=rock, tag='rock')
+            if result == 1:
+                if self.return_if_won(frm, 'X'):
+                    text = "X WINS!"
+                elif self.return_if_won(frm, 'O'):
+                    text = "O WINS!"
+            else:
+                text = 'TIE!'
+            
+            tk.Label(win_window, text=text, bg='#333333', fg='white', font=self.font).place(relx=0.5, rely=0.2, anchor=tk.CENTER)
+            return True
 
-def return_if_won(frm, player):
-    directions = [(0, 1), (1, 0), (1, 1), (1, -1)]
-    for r in range(gridsize):
-        for c in range(gridsize):
-            if not (frm.grid_slaves(r, c)):
-                continue
-            elif not (frm.grid_slaves(r, c))[0].find_withtag(player):
-                continue
-            for dr, dc in directions:
-                if target_num == 4:
-                    try:
-                        if c - 3 >= 0 or dc != -1:
-                            if ((frm.grid_slaves(r, c))[0].find_withtag(player) and 
-                                (frm.grid_slaves(r+dr, c+dc))[0].find_withtag(player) and
-                                (frm.grid_slaves(r+(dr*2), c+(dc*2)))[0].find_withtag(player) and 
-                                (frm.grid_slaves(r+(dr*3), c+(dc*3)))[0].find_withtag(player)):
-                                return True
-                    except IndexError:
-                        pass
-                elif target_num == 5:
-                    try:
-                        if c - 4 >= 0 or dc != -1:
-                            if ((frm.grid_slaves(r, c))[0].find_withtag(player) and 
-                                (frm.grid_slaves(r+dr, c+dc))[0].find_withtag(player) and
-                                (frm.grid_slaves(r+(dr*2), c+(dc*2)))[0].find_withtag(player) and 
-                                (frm.grid_slaves(r+(dr*3), c+(dc*3)))[0].find_withtag(player) and
-                                (frm.grid_slaves(r+(dr*4), c+(dc*4)))[0].find_withtag(player)):
-                                return True
-                    except IndexError:
-                        pass
+    def play_move(self, r, c):
+        
+        if self.won:
+            return
 
-def place_grid(root):
-    frm = ttk.Frame(root)
-    frm.grid()
-    
-    global matrix
-    
-    if not matrix:
-        matrix = [[0 for _ in range(gridsize)] for _ in range(gridsize)]
-    else:
-        new_matrix = [[0 for _ in range(gridsize)] for _ in range(gridsize)]
-        for i in range(gridsize - 2):
-            for j in range(gridsize - 2):
-                new_matrix[j+1][i+1] = matrix[j][i]
-        matrix = new_matrix
-    
-    for i in range(gridsize):
-        for j in range(gridsize):
-            canvas = tk.Canvas(frm, width=100, height=100, bg='white')
-            canvas.grid(row=j, column=i)
-            canvas.bind("<Button-1>", lambda e, r=j, c=i: play_move(r, c, root))
-    
-    frm.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
-
-def destroy_window_menu_return(root, window):
-    return_menu(root)
-    window.destroy()
-
-def get_frame(root):
-    for children in root.winfo_children():
-        if isinstance(children, ttk.Frame):
-            return children
-
-def grow_grid(root):
-    global gridsize
-    global target_num
-    gridsize += 2
-    target_num = 5
-
-    frm = get_frame(root)
-    frm.destroy() # type: ignore
-    
-    place_grid(root)
-    frm = get_frame(root)
-    update_board(frm)
-
-def matrix_func_update(func, root):
-    func(matrix, gridsize)
-    frm = get_frame(root)
-    update_board(frm)
-    result = 0
-    
-    if check_full(matrix, gridsize):
-        result = 2
-    
-    if return_if_won(frm, 'X') or return_if_won(frm, 'O'):
-        if return_if_won(frm, 'X') and return_if_won(frm, 'O'):
+        if not matrix_set(r, c, self.matrix, self.current_player):
+            return
+        
+        frm = self.get_frame()
+        self.update_board(frm)
+        
+        result = 0
+        
+        if check_full(self.matrix, self.gridsize):
             result = 2
+        
+        if self.return_if_won(frm, 'X') or self.return_if_won(frm, 'O'):
+            if self.return_if_won(frm, 'X') and self.return_if_won(frm, 'O'):
+                result = 2
+            else:
+                result = 1
+        
+        if self.win_state(frm, result):
+            won = True
+            return
+        
+        if self.current_player == 'x':
+            self.current_player = 'o'
+        elif self.current_player == 'o':
+            self.current_player = 'x'
+        
+        self.root.update_idletasks()
+        time.sleep(0.7)
+        self.do_event()
+        
+        last_event = self.next_event
+        while last_event == self.next_event:
+            self.next_event = random.choices(self.event_options, weights=self.event_weights, k=1)[0]
+        self.next_event_text.set(f"Next Event:\n{self.next_event.value}")
+        self.cur_player_text.set(f"Current Player is {self.current_player.upper()}")
+        if (self.cpu_easy or self.cpu_normal) and self.current_player == 'o':
+            self.root.update_idletasks()
+            time.sleep(1)
+            move = (0, 0)
+            if self.cpu_easy:
+                move = cpu_easy_move(self.matrix, self.gridsize)
+            elif self.cpu_normal:
+                move = cpu_normal_move(self.matrix, self.gridsize)
+            self.play_move(move[0], move[1])
+
+    def update_board(self, frm):
+        if self.matrix == None:
+            return  
+        for r in range(self.gridsize):
+            for c in range(self.gridsize):
+                if self.matrix[r][c] == 0:
+                    canvas = (frm.grid_slaves(r, c))[0]
+                    if canvas.find_all():
+                        canvas.delete('all')
+
+                elif self.matrix[r][c] == 1:
+                    canvas = (frm.grid_slaves(r, c))[0]
+                    if not canvas.find_withtag('X'):
+                        canvas.delete('all')
+                        canvas.create_image(4, 3, anchor=tk.NW, image=self.red_x, tag='X')
+
+                elif self.matrix[r][c] == 2:
+                    canvas = (frm.grid_slaves(r, c))[0]
+                    if not canvas.find_withtag('O'):
+                        canvas.delete('all')
+                        canvas.create_image(3, 4, anchor=tk.NW, image=self.blue_o, tag='O')
+                
+                elif self.matrix[r][c] == 3:
+                    canvas = (frm.grid_slaves(r, c))[0]
+                    if not canvas.find_withtag('rock'):
+                        canvas.delete('all')
+                        canvas.create_image(3, 4, anchor=tk.NW, image=self.rock, tag='rock')
+
+    def return_if_won(self, frm, player):
+        directions = [(0, 1), (1, 0), (1, 1), (1, -1)]
+        for r in range(self.gridsize):
+            for c in range(self.gridsize):
+                if not (frm.grid_slaves(r, c)):
+                    continue
+                elif not (frm.grid_slaves(r, c))[0].find_withtag(player):
+                    continue
+                for dr, dc in directions:
+                    if self.target_num == 4:
+                        try:
+                            if c - 3 >= 0 or dc != -1:
+                                if ((frm.grid_slaves(r, c))[0].find_withtag(player) and 
+                                    (frm.grid_slaves(r+dr, c+dc))[0].find_withtag(player) and
+                                    (frm.grid_slaves(r+(dr*2), c+(dc*2)))[0].find_withtag(player) and 
+                                    (frm.grid_slaves(r+(dr*3), c+(dc*3)))[0].find_withtag(player)):
+                                    return True
+                        except IndexError:
+                            pass
+                    elif self.target_num == 5:
+                        try:
+                            if c - 4 >= 0 or dc != -1:
+                                if ((frm.grid_slaves(r, c))[0].find_withtag(player) and 
+                                    (frm.grid_slaves(r+dr, c+dc))[0].find_withtag(player) and
+                                    (frm.grid_slaves(r+(dr*2), c+(dc*2)))[0].find_withtag(player) and 
+                                    (frm.grid_slaves(r+(dr*3), c+(dc*3)))[0].find_withtag(player) and
+                                    (frm.grid_slaves(r+(dr*4), c+(dc*4)))[0].find_withtag(player)):
+                                    return True
+                        except IndexError:
+                            pass
+
+    def place_grid(self):
+        frm = ttk.Frame(self.root)
+        frm.grid()
+        
+        if not self.matrix:
+            self.matrix = [[0 for _ in range(self.gridsize)] for _ in range(self.gridsize)]
         else:
-            result = 1 
-    
-    win_state(root, frm, result)
+            new_matrix = [[0 for _ in range(self.gridsize)] for _ in range(self.gridsize)]
+            for i in range(self.gridsize - 2):
+                for j in range(self.gridsize - 2):
+                    new_matrix[j+1][i+1] = self.matrix[j][i]
+            self.matrix = new_matrix
+        
+        for i in range(self.gridsize):
+            for j in range(self.gridsize):
+                canvas = tk.Canvas(frm, width=100, height=100, bg='white')
+                canvas.grid(row=j, column=i)
+                canvas.bind("<Button-1>", lambda e, r=j, c=i: self.play_move(r, c))
+        
+        frm.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
+
+    def destroy_window_menu_return(self, window):
+        self.return_menu()
+        window.destroy()
+
+    def get_frame(self):
+        for children in self.root.winfo_children():
+            if isinstance(children, ttk.Frame):
+                return children
+
+    def grow_grid(self):
+        self.gridsize += 2
+        self.target_num = 5
+
+        frm = self.get_frame()
+        frm.destroy() # type: ignore
+        
+        self.place_grid()
+        frm = self.get_frame()
+        self.update_board(frm)
+
+    def matrix_func_update(self, func):
+        func(self.matrix, self.gridsize)
+        frm = self.get_frame()
+        self.update_board(frm)
+        result = 0
+        
+        if check_full(self.matrix, self.gridsize):
+            result = 2
+        
+        if self.return_if_won(frm, 'X') or self.return_if_won(frm, 'O'):
+            if self.return_if_won(frm, 'X') and self.return_if_won(frm, 'O'):
+                result = 2
+            else:
+                result = 1 
+        
+        self.win_state(frm, result)
