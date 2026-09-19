@@ -24,8 +24,8 @@ class Random_Event(Enum):
 class Game():
     def __init__(self, root) -> None:
         self.root = root
-
         self.font = 'Calibri 12 bold'
+
         self.gridsize = 4
         self.matrix = None
         self.target_num = 4
@@ -41,7 +41,6 @@ class Game():
         self.rock = tk.PhotoImage(file='src/assets/images/rock_graphic.png')
 
     def reset_values(self) -> None:
-        self.font = 'Calibri 12 bold'
         self.gridsize = 4
         self.matrix = None
         self.target_num = 4
