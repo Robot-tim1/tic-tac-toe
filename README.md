@@ -1,6 +1,7 @@
 # Totally normal tic-tac-toe
 Totally normal tic-tac-toe... expect a random event happens every round. 
-Also it's a 4x4 board and you have to get 4 in the row in the start
+
+Also it's a 4x4 board and you have to get 4 in the row to win.
 
 ## Installation
 First make sure you have python and tkinter installed
